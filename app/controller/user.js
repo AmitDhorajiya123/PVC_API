@@ -5,7 +5,7 @@ const admintoken = require("../models/admintoken");
 const companyUser = require("../models/companyUser");
 const company = require("../models/company");
 const C_userBalance = require("../models/C_userBalance");
-const {Op, Sequelize} = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const UserBankAccount = require("../models/userBankAccount");
 const C_WalletLedger = require("../models/C_WalletLedger");
 const C_Cashbook = require("../models/C_Cashbook");
@@ -83,7 +83,7 @@ exports.create_user = async (req, res) => {
       companyId: req.user.companyId,
       setDefault: true,
     });
-     await C_userBalance.create({
+    await C_userBalance.create({
       userId: user.id,
       companyId: req.user.companyId,
       balance: 0,
@@ -100,7 +100,7 @@ exports.get_all_user = async (req, res) => {
   try {
     const companyId = req.user.companyId;
     const { search } = req.query;
-    const whereClause = {role: { [Op.ne]: "Super Admin" } };
+    const whereClause = { role: { [Op.ne]: "Super Admin" } };
 
     if (search) {
       whereClause.username = { [Op.like]: `%${search}%` };
@@ -143,7 +143,7 @@ exports.view_user = async (req, res) => {
 
     const data = await User.findOne({
       where: { id: id },
-      include: [{ model: company, as: "companies", where: { id: companyId }, attributes: [] }, {model: UserBankAccount, as: "userBankAccount"}],
+      include: [{ model: company, as: "companies", where: { id: companyId }, attributes: [] }, { model: UserBankAccount, as: "userBankAccount" }],
     });
     if (data) {
       return res.status(200).json({
@@ -203,12 +203,12 @@ exports.update_user = async (req, res) => {
 
     if (FindID.mobileno !== mobileno) {
       const existingMobile = await User.findOne({ where: { mobileno: mobileno } });
-      if(existingMobile) {
+      if (existingMobile) {
         return res
-      .status(400)
-    .json({ status: "false", message: "Mobile Number Already Exists" });
-  }
-  }
+          .status(400)
+          .json({ status: "false", message: "Mobile Number Already Exists" });
+      }
+    }
     const companyData = await companyUser.findOne({
       where: { companyId: req.user.companyId },
     });
@@ -317,8 +317,7 @@ exports.user_login = async (req, res) => {
         username: user.username,
         companyId: data.companyId,
       },
-      process.env.SECRET_KEY,
-      { expiresIn: "10h" }
+      process.env.SECRET_KEY
     );
 
     const existingToken = await admintoken.findOne({
@@ -375,18 +374,18 @@ exports.check_user = async (req, res) => {
       where: { email: email, mobileno: mobileno },
       attributes: { exclude: ["password"] },
     });
-if(data) {
-  return res.status(200).json({
-    status: "true",
-    message: "User Data Fetch Successfully",
-    data: data,
-  });
-} else {
-  return res.status(404).json({
-    status: "false",
-    message: "User Not Found",
-  });
-}
+    if (data) {
+      return res.status(200).json({
+        status: "true",
+        message: "User Data Fetch Successfully",
+        data: data,
+      });
+    } else {
+      return res.status(404).json({
+        status: "false",
+        message: "User Not Found",
+      });
+    }
   } catch (error) {
     console.log(error);
     return res
@@ -427,14 +426,14 @@ exports.add_user = async (req, res) => {
         .json({ status: "false", message: "User Already Exists" });
     }
 
-    if(findCompany){
-        await companyUser.create({ companyId: companyId, userId: id });
-    }else{
+    if (findCompany) {
+      await companyUser.create({ companyId: companyId, userId: id });
+    } else {
       await companyUser.create({ companyId: companyId, userId: id, setDefault: true });
     }
     return res
-        .status(200)
-        .json({ status: "true", message: "User Added Successfully" });
+      .status(200)
+      .json({ status: "true", message: "User Added Successfully" });
   } catch (error) {
     console.log(error);
     return res
@@ -447,7 +446,7 @@ exports.view_all_userTOComapny = async (req, res) => {
     const userId = req.user.userId;
 
     const data = await companyUser.findAll({
-      where:{userId:userId},
+      where: { userId: userId },
       include: [{ model: company, as: "companies" }],
     });
     if (data) {
@@ -470,14 +469,14 @@ exports.view_all_userTOComapny = async (req, res) => {
       .json({ status: "false", message: "Internal Server Error" });
   }
 };
-exports.remove_company = async (req,res)=>{
+exports.remove_company = async (req, res) => {
   try {
     const companyId = req.user.companyId;
-    const {id} = req.params;
+    const { id } = req.params;
 
     const findUser = await User.findByPk(id);
 
-    if(!findUser){
+    if (!findUser) {
       return res.status(404).json({
         status: "false",
         message: "User Not Found"
@@ -497,21 +496,21 @@ exports.remove_company = async (req,res)=>{
         companyId: companyId,
       }
     })
-    if(!currentCompany){
+    if (!currentCompany) {
       return res.status(404).json({
         status: "false",
         message: "Current Company Not Found."
       })
     }
 
-    if(currentCompany.setDefault){
-      if(findAllCompany.length){
+    if (currentCompany.setDefault) {
+      if (findAllCompany.length) {
         const firstCompany = findAllCompany[0];
         firstCompany.setDefault = true;
         await firstCompany.save();
       }
       await currentCompany.destroy();
-    }else{
+    } else {
       await currentCompany.destroy();
     }
 
@@ -520,7 +519,7 @@ exports.remove_company = async (req,res)=>{
       message: "Successfully remove user in company."
     })
 
-  }catch (e) {
+  } catch (e) {
     console.error(e)
     return res.status(500).json({
       status: "false",
@@ -529,7 +528,7 @@ exports.remove_company = async (req,res)=>{
   }
 
 }
-exports.add_user_bank_account = async (req,res)=>{
+exports.add_user_bank_account = async (req, res) => {
   try {
     const {
       accountname,
@@ -540,7 +539,7 @@ exports.add_user_bank_account = async (req,res)=>{
       userId
     } = req.body;
     const userData = await User.findByPk(userId);
-    if(!userData){
+    if (!userData) {
       return res.status(404).json({
         status: "false",
         message: "User Not Found."
@@ -551,16 +550,16 @@ exports.add_user_bank_account = async (req,res)=>{
     });
     if (existingAccount) {
       return res
-          .status(400)
-          .json({ status: "false", message: "Account Number already Exists" });
+        .status(400)
+        .json({ status: "false", message: "Account Number already Exists" });
     }
     const existingIfsc = await UserBankAccount.findOne({
       where: { ifsccode: ifsccode },
     });
     if (existingIfsc) {
       return res
-          .status(400)
-          .json({ status: "false", message: "IFSC Code already Exists" });
+        .status(400)
+        .json({ status: "false", message: "IFSC Code already Exists" });
     }
     const data = await UserBankAccount.create({
       userId,
@@ -575,143 +574,143 @@ exports.add_user_bank_account = async (req,res)=>{
       message: "Bank Details Create Successfully",
       data: data,
     });
-  }catch (e) {
+  } catch (e) {
     console.log(e);
     return res
-        .status(500)
-        .json({ status: "false", message: "Internal Server Error" });
+      .status(500)
+      .json({ status: "false", message: "Internal Server Error" });
   }
 }
-exports.edit_user_bank_account = async (req, res)=>{
- try {
-   const { accountId } = req.params;
-   const {
-     userId,
-     accountname,
-     bankname,
-     accountnumber,
-     ifsccode,
-     branch,
-   } = req.body;
-   const bankData = await UserBankAccount.findOne({
-     where: {
-       id: accountId,
-       userId: userId
-     }
-   });
-   if(!bankData){
-     return res
-         .status(404)
-         .json({ status: "false", message: "Bank Details Not Found" });
-   }
-   const userData = await User.findByPk(userId);
-   if(!userData){
-     return res.status(404).json({status: "false", message: "User Not Found."})
-   }
-   const existingAccount = await UserBankAccount.findOne({
-     where: { accountnumber: accountnumber, id: { [Sequelize.Op.ne]: accountId }, },
-   })
-   if (existingAccount) {
-     return res
-         .status(400)
-         .json({ status: "false", message: "Account Number already Exists" });
-   }
-   const existingIfsc = await UserBankAccount.findOne({
-     where: { ifsccode: ifsccode, id: { [Sequelize.Op.ne]: accountId } },
-   });
-   if (existingIfsc) {
-     return res
-         .status(400)
-         .json({ status: "false", message: "IFSC Code already Exists" });
-   }
-   const data = await UserBankAccount.update(
-       {
-         userId,
-         accountname,
-         bankname,
-         accountnumber,
-         ifsccode,
-         branch,
-       },
-       {
-         where: { id: accountId },
-         returning: true,
-       }
-   );
-   return res.status(200).json({
-     status: "true",
-     message: "Bank Details Updated Successfully",
-     data: data,
-   });
- }catch (e) {
-   console.log(error);
-   return res
-       .status(500)
-       .json({ status: "false", message: "Internal Server Error" });
- }
+exports.edit_user_bank_account = async (req, res) => {
+  try {
+    const { accountId } = req.params;
+    const {
+      userId,
+      accountname,
+      bankname,
+      accountnumber,
+      ifsccode,
+      branch,
+    } = req.body;
+    const bankData = await UserBankAccount.findOne({
+      where: {
+        id: accountId,
+        userId: userId
+      }
+    });
+    if (!bankData) {
+      return res
+        .status(404)
+        .json({ status: "false", message: "Bank Details Not Found" });
+    }
+    const userData = await User.findByPk(userId);
+    if (!userData) {
+      return res.status(404).json({ status: "false", message: "User Not Found." })
+    }
+    const existingAccount = await UserBankAccount.findOne({
+      where: { accountnumber: accountnumber, id: { [Sequelize.Op.ne]: accountId }, },
+    })
+    if (existingAccount) {
+      return res
+        .status(400)
+        .json({ status: "false", message: "Account Number already Exists" });
+    }
+    const existingIfsc = await UserBankAccount.findOne({
+      where: { ifsccode: ifsccode, id: { [Sequelize.Op.ne]: accountId } },
+    });
+    if (existingIfsc) {
+      return res
+        .status(400)
+        .json({ status: "false", message: "IFSC Code already Exists" });
+    }
+    const data = await UserBankAccount.update(
+      {
+        userId,
+        accountname,
+        bankname,
+        accountnumber,
+        ifsccode,
+        branch,
+      },
+      {
+        where: { id: accountId },
+        returning: true,
+      }
+    );
+    return res.status(200).json({
+      status: "true",
+      message: "Bank Details Updated Successfully",
+      data: data,
+    });
+  } catch (e) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ status: "false", message: "Internal Server Error" });
+  }
 }
-exports.delete_user_bank_account = async (req, res)=>{
+exports.delete_user_bank_account = async (req, res) => {
   try {
     const { accountId } = req.params;
     const bankData = await UserBankAccount.findByPk(accountId);
-    if(!bankData) return res.status(404).json({status: "false", message: "Bank Account Not Found."});
+    if (!bankData) return res.status(404).json({ status: "false", message: "Bank Account Not Found." });
 
     await UserBankAccount.destroy({
-      where: {id: accountId}
+      where: { id: accountId }
     })
-    return res.status(200).json({status: "true", message: "Bank Account Deleted Successfully." });
-  }catch (e) {
+    return res.status(200).json({ status: "true", message: "Bank Account Deleted Successfully." });
+  } catch (e) {
     console.log(e);
-    return res.status(500).json({status: "false", message: "Internal Server Error"});
+    return res.status(500).json({ status: "false", message: "Internal Server Error" });
   }
 }
-exports.view_user_bank_account = async (req, res)=>{
+exports.view_user_bank_account = async (req, res) => {
   try {
     const { accountId } = req.params;
     const bankData = await UserBankAccount.findByPk(accountId);
-    if(!bankData){
-      return res.status(404).json({status: "false", message: "Bank Account Not Found."});
+    if (!bankData) {
+      return res.status(404).json({ status: "false", message: "Bank Account Not Found." });
     }
-    return res.status(200).json({status: "true", message: "Bank Account Fetch Successfully.", data: bankData });
-  }catch (e) {
+    return res.status(200).json({ status: "true", message: "Bank Account Fetch Successfully.", data: bankData });
+  } catch (e) {
     console.log(e);
-    return res.status(500).json({status: "false", message: "Internal Server Error"});
+    return res.status(500).json({ status: "false", message: "Internal Server Error" });
   }
 }
-exports.view_all_user_bank_account = async (req, res)=>{
+exports.view_all_user_bank_account = async (req, res) => {
   try {
-    const {userId} = req.params;
+    const { userId } = req.params;
     const userData = await User.findByPk(userId);
-    if(!userData) return res.status(404).json({status: "false", message: "User Not Found."});
+    if (!userData) return res.status(404).json({ status: "false", message: "User Not Found." });
     const data = await UserBankAccount.findAll({
       where: {
         userId: userId,
       }
     });
-    return res.status(200).json({status: "true", message: "Bank Account Fetch Successfully.", data: data})
-  }catch (e) {
+    return res.status(200).json({ status: "true", message: "Bank Account Fetch Successfully.", data: data })
+  } catch (e) {
     console.log(e);
-    return res.status(500).json({status: "false", message: "Internal Server Error."})
+    return res.status(500).json({ status: "false", message: "Internal Server Error." })
   }
 }
 
-exports.wallet_approve = async (req, res)=>{
-  try{
-    const {id} = req.params;
-    const {companyId} = req.user;
+exports.wallet_approve = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { companyId } = req.user;
     const existWalletLedger = await C_WalletLedger.findOne({
       where: {
         id: id,
         companyId: companyId,
       }
     })
-    if(!existWalletLedger){
+    if (!existWalletLedger) {
       return res.status(404).json({
         status: "false",
         message: "Wallet Entry Not Found."
       })
     }
-    if(existWalletLedger.isApprove){
+    if (existWalletLedger.isApprove) {
       return res.status(400).json({
         status: "false",
         message: "Wallet Entry Already Approved."
@@ -726,7 +725,7 @@ exports.wallet_approve = async (req, res)=>{
       companyId: companyId,
       date: new Date()
     })
-    if(existWalletLedger.paymentId){
+    if (existWalletLedger.paymentId) {
       const paymentData = await C_Payment.findOne({
         where: {
           id: existWalletLedger.paymentId,
@@ -740,17 +739,17 @@ exports.wallet_approve = async (req, res)=>{
           companyId: companyId
         }
       });
-      await userBalance.decrement('incomes', {by: paymentAmount})
+      await userBalance.decrement('incomes', { by: paymentAmount })
     }
-    
+
     return res.status(200).json({
       status: "true",
       message: "Wallet Entry Approved Successfully.",
     })
-  }catch (e) {
+  } catch (e) {
     console.log(e);
     return res
-        .status(500)
-        .json({ status: "false", message: "Internal Server Error" });
+      .status(500)
+      .json({ status: "false", message: "Internal Server Error" });
   }
 }
